@@ -13,8 +13,48 @@ library(assertthat)
 # * Prepare to discuss in the next session!
 # * Hint: the final table must have the following columns: stadtteil, mig_ratio, turn_out, afd.
 
+#Import libraries
+library(dplyr)
+library(tidyr)
+library(purrr)
 
-# combined <- …
+#Einlesesn Dateien
+wahlergebnisse = readRDS("wahlergebnisse.rds")
+stadtteil_profil = readRDS('stadtteil_profil.rds')
+
+
+stadtteil_ergebnisse = wahlergebnisse %>% 
+  group_by(bezeichnung) %>% 
+  summarise(
+    across(9:16, ~. /gultige_stimmen*100)
+  ) %>% 
+  rename(stadtteil = bezeichnung)
+
+migration = stadtteil_profil %>% 
+  group_by(stadtteil) %>% 
+  summarise(
+    across(bevolkerung_mit_migrations_hintergrund, ~./bevolkerung *100, .names="mig_ratio")
+  )
+turn_out = wahlergebnisse %>% 
+  group_by(bezeichnung)%>%
+  summarise(across(wahlende, ~./wahlberechtigte_insgesamt, .names="turn_out")
+  ) %>% 
+  rename(stadtteil = bezeichnung)
+
+ubersicht = migration %>% 
+  left_join(turn_out)
+
+ubersicht = ubersicht %>% 
+  left_join(stadtteil_ergebnisse)
+
+ubersicht = ubersicht %>% 
+  select(stadtteil, mig_ratio, turn_out, af_d) %>% 
+  rename(afd = af_d)
+  
+ubersicht = ubersicht %>% 
+  arrange(desc(afd))
+
+combined <- ubersicht
 
 if (
   assert_that(
@@ -48,3 +88,4 @@ if (
 ) {
   writeLines("10/10 Points. Congrats!")
 }
+
