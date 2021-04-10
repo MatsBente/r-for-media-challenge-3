@@ -6,7 +6,7 @@ library(assertthat)
 # * Calculate each parties' election result per district (valid ballots are basis for this calculation).
 # * Hint: investigate the function `across()` for applying calculation on multiple columns at once.
 # * Calculate the ratio of people with a migration background in the total population of each district.
-# * Compare migration ratio to results of the AfD
+# * Compare migration ratio to results of the AfD 
 # * Compare the voter turnout to both other variables.
 # * Join the two data sets.
 # * Arrange by the AFD's results in descending order. 
@@ -26,14 +26,14 @@ stadtteil_profil = readRDS('stadtteil_profil.rds')
 stadtteil_ergebnisse = wahlergebnisse %>% 
   group_by(bezeichnung) %>% 
   summarise(
-    across(9:16, ~. /gultige_stimmen*100)
+    across(9:16, ~. /gultige_stimmen)
   ) %>% 
   rename(stadtteil = bezeichnung)
 
 migration = stadtteil_profil %>% 
   group_by(stadtteil) %>% 
   summarise(
-    across(bevolkerung_mit_migrations_hintergrund, ~./bevolkerung *100, .names="mig_ratio")
+    across(bevolkerung_mit_migrations_hintergrund, ~./bevolkerung, .names="mig_ratio")
   )
 turn_out = wahlergebnisse %>% 
   group_by(bezeichnung)%>%
@@ -44,14 +44,14 @@ turn_out = wahlergebnisse %>%
 ubersicht = migration %>% 
   left_join(turn_out)
 
-ubersicht = ubersicht %>% 
-  left_join(stadtteil_ergebnisse)
+ubersichtII = stadtteil_ergebnisse %>% 
+  left_join(ubersicht)
 
-ubersicht = ubersicht %>% 
+ubersichtII = ubersichtII %>% 
   select(stadtteil, mig_ratio, turn_out, af_d) %>% 
   rename(afd = af_d)
   
-ubersicht = ubersicht %>% 
+ubersicht = ubersichtII %>% 
   arrange(desc(afd))
 
 combined <- ubersicht
